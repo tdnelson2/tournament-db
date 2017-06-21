@@ -55,37 +55,24 @@ def registerPlayer(name):
     db.commit()
     db.close()
 
-def dirtyPairUp():
+def initialPairUp():
     db = connect()
     c = db.cursor()
     query = """
-WITH summary as
-    (SELECT id, ROW_NUMBER()
-     OVER (ORDER BY id ASC)
-     FROM players)
-SELECT a.id as player1, b.id as player2
-FROM summary as a, summary as b
-WHERE a.row_number+1 = b.row_number
-AND (a.row_number % 2) = 1
-AND (b.row_number % 2) = 0;
-#     query = """
-# SELECT ROW(row1).id as player1, ROW(row2) as player2
-# FROM
-#     (
-#     SELECT MIN(row_number) as row1, MAX(row_number) as row2
-#     FROM
-#         (SELECT id, ROW_NUMBER()
-#          OVER (ORDER BY id ASC)
-#          FROM players)
-#          as subqInner
-#     GROUP BY FLOOR((row_number+1)/2)
-#     )
-# as subqOuter;
-#     """
-    c.execute("")
-    rows = c.fetchall()
+    WITH summary as
+        (SELECT id, ROW_NUMBER()
+         OVER (ORDER BY id ASC)
+         FROM players)
+    INSERT INTO matches (player1, player2, winner, round)
+    SELECT a.id as player1, b.id as player2, NULL as winner, 1 as round
+    FROM summary as a, summary as b
+    WHERE a.row_number+1 = b.row_number
+    AND (a.row_number % 2) = 1
+    AND (b.row_number % 2) = 0;
+    """
+    c.execute(query)
+    db.commit()
     db.close()
-    return reversed(rows)
 
 
 def playerStandings():

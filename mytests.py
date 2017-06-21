@@ -1,21 +1,20 @@
 import tournament
 
-# tournament.registerPlayer('Will Nelson')
-# tournament.deletePlayers()
+tournament.deletePlayers()
+tournament.deleteMatches()
 
-# for name in ["Bakker",
-#              "Goan",
-#              "Hochstein",
-#              "Kliewer",
-#              "Langford",
-#              "McFarland",
-#              "Montgomery",
-#              "Nelson",
-#              "Ott",
-#              "Prasoloff",
-#              "Vlad",
-#              "Wheelock"]:
-#     tournament.registerPlayer(name)
+for name in ["Bakker",
+             "Goan",
+             "Hochstein",
+             "Kliewer",
+             "Langford",
+             "McFarland",
+             "Montgomery",
+             "Nelson",
+             "Ott",
+             "Prasoloff",
+             "Vlad",
+             "Wheelock"]:
+    tournament.registerPlayer(name)
 
-for tup in tournament.dirtyPairUp():
-    print tup[0]
+tournament.initialPairUp()
