@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# 
+#
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
@@ -13,22 +13,38 @@ def connect():
 
 def deleteMatches():
     """Remove all the match records from the database."""
+    db = connect()
+    c = db.cursor()
+    c.execute("DELETE FROM matches;")
+    db.commit()
+    db.close
+
 
 
 def deletePlayers():
     """Remove all the player records from the database."""
+    db = connect()
+    c = db.cursor()
+    c.execute("DELETE FROM players;")
+    db.commit()
+    db.close
 
 
 def countPlayers():
     """Returns the number of players currently registered."""
+    db = connect()
+    c = db.cursor()
+    c.execute("SELECT COUNT(*) FROM players;")
+    db.commit()
+    db.close
 
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
-  
+
     The database assigns a unique serial id number for the player.  (This
     should be handled by your SQL database schema, not in your Python code.)
-  
+
     Args:
       name: the player's full name (need not be unique).
     """
@@ -38,6 +54,38 @@ def registerPlayer(name):
     c.execute("INSERT INTO players (name) values (%s)", (bleach.clean(name),))
     db.commit()
     db.close()
+
+def dirtyPairUp():
+    db = connect()
+    c = db.cursor()
+    query = """
+WITH summary as
+    (SELECT id, ROW_NUMBER()
+     OVER (ORDER BY id ASC)
+     FROM players)
+SELECT a.id as player1, b.id as player2
+FROM summary as a, summary as b
+WHERE a.row_number+1 = b.row_number
+AND (a.row_number % 2) = 1
+AND (b.row_number % 2) = 0;
+#     query = """
+# SELECT ROW(row1).id as player1, ROW(row2) as player2
+# FROM
+#     (
+#     SELECT MIN(row_number) as row1, MAX(row_number) as row2
+#     FROM
+#         (SELECT id, ROW_NUMBER()
+#          OVER (ORDER BY id ASC)
+#          FROM players)
+#          as subqInner
+#     GROUP BY FLOOR((row_number+1)/2)
+#     )
+# as subqOuter;
+#     """
+    c.execute("")
+    rows = c.fetchall()
+    db.close()
+    return reversed(rows)
 
 
 def playerStandings():
@@ -62,16 +110,35 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
- 
- 
+    w = str(winner)
+    l = str(loser)
+    db = connect()
+    c = db.cursor()
+    update = ("""
+             UPDATE matches
+             SET winner = %s
+             WHERE
+                (player1 = %s
+                OR player1 = %s)
+            AND
+                (player2 = %s
+                OR player2 = %s);
+
+    """ % (w, w, l, w, l))
+    c.execute()
+    db.commit()
+    db.close()
+
+
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
-  
+
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
     player with an equal or nearly-equal win record, that is, a player adjacent
     to him or her in the standings.
-  
+
     Returns:
       A list of tuples, each of which contains (id1, name1, id2, name2)
         id1: the first player's unique id

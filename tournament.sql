@@ -17,5 +17,6 @@ CREATE TABLE players ( name TEXT,
 
 CREATE TABLE matches ( player1 INTEGER,
 					   player2 INTEGER,
-					   winner INTEGER );
+					   winner INTEGER,
+                       round INTEGER );
 
