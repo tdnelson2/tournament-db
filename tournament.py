@@ -35,8 +35,10 @@ def countPlayers():
     db = connect()
     c = db.cursor()
     c.execute("SELECT COUNT(*) FROM players;")
+    rows = c.fetchall()
     db.commit()
     db.close
+    return rows[0][0]
 
 
 def registerPlayer(name):
@@ -59,13 +61,13 @@ def initialPairUp():
     db = connect()
     c = db.cursor()
     query = """
-    WITH summary as
+    WITH subq as
         (SELECT id, ROW_NUMBER()
          OVER (ORDER BY id ASC)
          FROM players)
     INSERT INTO matches (player1, player2, winner, round)
     SELECT a.id as player1, b.id as player2, NULL as winner, 1 as round
-    FROM summary as a, summary as b
+    FROM subq as a, subq as b
     WHERE a.row_number+1 = b.row_number
     AND (a.row_number % 2) = 1
     AND (b.row_number % 2) = 0;
@@ -102,17 +104,17 @@ def reportMatch(winner, loser):
     db = connect()
     c = db.cursor()
     update = ("""
-             UPDATE matches
-             SET winner = %s
-             WHERE
-                (player1 = %s
-                OR player1 = %s)
-            AND
-                (player2 = %s
-                OR player2 = %s);
+    UPDATE matches
+    SET winner = %s
+    WHERE
+        (player1 = %s
+        OR player1 = %s)
+    AND
+        (player2 = %s
+        OR player2 = %s);
 
     """ % (w, w, l, w, l))
-    c.execute()
+    c.execute(update)
     db.commit()
     db.close()
 
