@@ -1,8 +1,8 @@
 import tournament
 import tournament_test
 
-# tournament.deletePlayers()
-# tournament.deleteMatches()
+tournament.deletePlayers()
+tournament.deleteMatches()
 
 for name in ["Bakker",
              "Goan",
@@ -27,5 +27,3 @@ for result in [(1, 2),
 			   (9, 10), 
 			   (11, 12)]:
 	tournament.reportMatch(*result)
-
-# tournament_test.testCount()
