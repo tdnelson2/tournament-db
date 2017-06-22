@@ -63,8 +63,8 @@ def initialPairUp():
         (SELECT id, ROW_NUMBER()
          OVER (ORDER BY id ASC)
          FROM players)
-    INSERT INTO matches (player1, player2, winner, round)
-    SELECT a.id as player1, b.id as player2, NULL as winner, 1 as round
+    INSERT INTO matches (player1, player2, winner)
+    SELECT a.id as player1, b.id as player2, NULL as winner
     FROM summary as a, summary as b
     WHERE a.row_number+1 = b.row_number
     AND (a.row_number % 2) = 1
@@ -112,7 +112,7 @@ def reportMatch(winner, loser):
                 OR player2 = %s);
 
     """ % (w, w, l, w, l))
-    c.execute()
+    c.execute(update)
     db.commit()
     db.close()
 
