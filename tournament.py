@@ -56,7 +56,7 @@ def registerPlayer(name):
     db.commit()
     db.close()
 
-def initialPairUp():
+def pairUp():
     db = connect()
     c = db.cursor()
     query = """
@@ -89,6 +89,12 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+    db = connect()
+    c = db.cursor()
+    c.execute("SELECT * FROM standings")
+    rows = c.fetchall()
+    db.close()
+    return rows
 
 
 def reportMatch(winner, loser):
@@ -102,18 +108,7 @@ def reportMatch(winner, loser):
     l = str(loser)
     db = connect()
     c = db.cursor()
-    update = ("""
-    UPDATE matches
-    SET winner = %s
-    WHERE
-        (player1 = %s
-        OR player1 = %s)
-    AND
-        (player2 = %s
-        OR player2 = %s);
-
-    """ % (w, w, l, w, l))
-    c.execute(update)
+    c.execute("INSERT INTO matches values (%s, %s)" % (w, l))
     db.commit()
     db.close()
 
@@ -134,5 +129,34 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    db = connect()
+    c = db.cursor()
+    query = """
+        SELECT
+        a.id AS id1,
+        a.name AS name1,
+        b.id AS id2,
+        b.name AS name2
+    FROM
+        standings AS a,
+        standings AS b
+    WHERE
+        a.id < b.id
+        AND
+        a.id > %s
+        AND
+        a.wins = b.wins
+        AND
+        a.totalplayed = b.totalplayed
+    GROUP BY
+        id1, name1, id2, name2, a.wins
+    ORDER BY
+        a.wins DESC
+    """
+
+    c.execute("SELECT * FROM standings")
+    rows = c.fetchall()
+    db.close()
+    return rows
 
 
