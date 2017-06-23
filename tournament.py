@@ -56,25 +56,6 @@ def registerPlayer(name):
     db.commit()
     db.close()
 
-def pairUp():
-    db = connect()
-    c = db.cursor()
-    query = """
-    WITH subq as
-        (SELECT id, ROW_NUMBER()
-         OVER (ORDER BY id ASC)
-         FROM players)
-    INSERT INTO matches (player1, player2, winner)
-    SELECT a.id as player1, b.id as player2, NULL as winner
-    FROM subq as a, subq as b
-    WHERE a.row_number+1 = b.row_number
-    AND (a.row_number % 2) = 1
-    AND (b.row_number % 2) = 0;
-    """
-    c.execute(query)
-    db.commit()
-    db.close()
-
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -134,13 +115,9 @@ def swissPairings():
     c.execute("SELECT max(totalplayed) FROM standings;")
     rows = c.fetchall()
     maxRoundsPlayed = rows[0][0]
-    print "maxRoundsPlayed"
-    print maxRoundsPlayed
     c.execute("SELECT max(wins) FROM standings;")
     rows = c.fetchall()
     maxWins = rows[0][0]
-    print "maxWins"
-    print maxWins
     query = """
     WITH sq AS
         (SELECT id, name, ROW_NUMBER() OVER (ORDER BY id ASC) FROM (SELECT id, name FROM standings WHERE wins = {wins} and totalplayed = {totalplayed}) as sg)
@@ -158,12 +135,7 @@ def swissPairings():
     """
     pairings = []
     for x in range(maxRoundsPlayed+1):
-        print "current round target"
-        print x
         for y in range(maxWins+1):
-            print "current win target"
-            print y
-            print ""
             c.execute(query.format(wins=str(y), totalplayed=str(x)))
             rows = c.fetchall()
             if rows:
