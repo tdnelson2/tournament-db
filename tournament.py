@@ -131,32 +131,45 @@ def swissPairings():
     """
     db = connect()
     c = db.cursor()
+    c.execute("SELECT max(totalplayed) FROM standings;")
+    rows = c.fetchall()
+    maxRoundsPlayed = rows[0][0]
+    print "maxRoundsPlayed"
+    print maxRoundsPlayed
+    c.execute("SELECT max(wins) FROM standings;")
+    rows = c.fetchall()
+    maxWins = rows[0][0]
+    print "maxWins"
+    print maxWins
     query = """
-        SELECT
+    WITH sq AS
+        (SELECT id, name, ROW_NUMBER() OVER (ORDER BY id ASC) FROM (SELECT id, name FROM standings WHERE wins = {wins} and totalplayed = {totalplayed}) as sg)
+    SELECT
         a.id AS id1,
         a.name AS name1,
         b.id AS id2,
         b.name AS name2
     FROM
-        standings AS a,
-        standings AS b
+        sq as a, sq as b
     WHERE
-        a.id < b.id
-        AND
-        a.id > %s
-        AND
-        a.wins = b.wins
-        AND
-        a.totalplayed = b.totalplayed
-    GROUP BY
-        id1, name1, id2, name2, a.wins
-    ORDER BY
-        a.wins DESC
+        a.row_number+1 = b.row_number
+        AND (a.row_number % 2) = 1
+        AND (b.row_number % 2) = 0;
     """
-
-    c.execute("SELECT * FROM standings")
-    rows = c.fetchall()
+    pairings = []
+    for x in range(maxRoundsPlayed+1):
+        print "current round target"
+        print x
+        for y in range(maxWins+1):
+            print "current win target"
+            print y
+            print ""
+            c.execute(query.format(wins=str(y), totalplayed=str(x)))
+            rows = c.fetchall()
+            if rows:
+                for row in rows: 
+                    pairings.append(row)
     db.close()
-    return rows
+    return pairings
 
 

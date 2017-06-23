@@ -18,7 +18,7 @@ import tournament_test
 #              "Wheelock"]:
 #     tournament.registerPlayer(name)
 
-# tournament.initialPairUp()
+# # tournament.initialPairUp()
 
 # for result in [(1, 2),
 # 			   (3, 4),
@@ -27,7 +27,11 @@ import tournament_test
 # 			   (9, 10),
 # 			   (11, 12)]:
 # 	tournament.reportMatch(*result)
+
+
 # tournament_test.testCount()
 # tournament_test.testStandingsBeforeMatches()
 # tournament_test.testReportMatches()
 tournament_test.testPairings()
+
+# print tournament.swissPairings()

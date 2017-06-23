@@ -36,24 +36,3 @@ CREATE VIEW standings AS
         GROUP BY players.id, players.name
         ORDER BY COUNT(m1.winner) DESC;
 
-
-CREATE VIEW swisspairup AS
-
-    SELECT
-        a.id AS id1,
-        a.name AS name1,
-        b.id AS id2,
-        b.name AS name2
-    FROM
-        standings AS a,
-        standings AS b
-    WHERE
-        a.id < b.id
-        AND
-        a.wins = b.wins
-        AND
-        a.totalplayed = b.totalplayed
-    GROUP BY
-        id1, name1, id2, name2, a.wins
-    ORDER BY
-        a.wins DESC;
