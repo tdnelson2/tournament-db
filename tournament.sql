@@ -21,18 +21,34 @@ CREATE TABLE matches ( winner INTEGER,
 
 CREATE VIEW standings AS
     SELECT
-        players.id,
-        players.name,
-        COUNT(m1.winner) AS wins,
-        COUNT(m2.winner)+COUNT(m3.loser) AS totalplayed
+        a.id,
+        a.name,
+        SUM(a.wins) AS wins,
+        SUM(b.loses)+SUM(a.wins) AS totalplayed
     FROM
-        players
-        LEFT JOIN matches as m1
+        (
+        SELECT 
+            players.id, players.name, COUNT(m1.winner) AS wins 
+        FROM 
+            players
+        LEFT JOIN 
+            (SELECT winner FROM matches) AS m1
         ON players.id = m1.winner
-        LEFT JOIN matches as m2
-        ON players.id = m2.winner
-        LEFT JOIN matches as m3
-        ON players.id = m3.loser
         GROUP BY players.id, players.name
-        ORDER BY COUNT(m1.winner) DESC;
-
+        ) 
+        AS a
+    LEFT JOIN
+        (
+        SELECT 
+            players.id, players.name, COUNT(m2.loser) AS loses 
+        FROM 
+            players
+        LEFT JOIN 
+            (SELECT loser FROM matches) AS m2
+        ON players.id = m2.loser
+        GROUP BY players.id, players.name
+        ) 
+        AS b
+    ON a.id = b.id
+    GROUP BY a.id, a.name
+    ORDER BY SUM(a.wins) DESC;
