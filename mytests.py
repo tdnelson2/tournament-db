@@ -78,16 +78,16 @@ print pairings
 
 ###### 4TH ROUND
 
-# for result in [(8, 2),
-# 			   (16, 10),
-# 			   (4, 3),
-# 			   (5, 6),
-# 			   (11, 12),
-# 			   (15, 14),
-# 			   (1, 7),
-# 			   (9, 13)]:
-# 	tournament.reportMatch(*result)
+for result in [(10, 2),
+			   (3, 6),
+			   (8, 12),
+			   (16, 14),
+			   (5, 4),
+			   (11, 7),
+			   (13, 15),
+			   (9, 1)]:
+	tournament.reportMatch(*result)
 
-# pairings = tournament.swissPairings()
-# print str(len(pairings)) + " pairings found"
-# print pairings
+pairings = tournament.swissPairings()
+print str(len(pairings)) + " pairings found"
+print pairings
