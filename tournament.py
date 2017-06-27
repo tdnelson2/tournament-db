@@ -145,3 +145,36 @@ def swissPairings():
     return pairings
 
 
+
+def pairup():
+    db = connect()
+    c = db.cursor()
+    c.execute("DELETE FROM pairings;")
+    db.commit()
+    query = """
+        SELECT
+            a.id as id1,
+            b.id as id2
+         FROM
+            standings as a, standings as b
+         WHERE
+            a.wins = b.wins
+            AND
+            a.totalplayed = b.totalplayed
+            AND
+            a.id != b.id
+         ORDER BY
+            a.id DESC;
+    """
+    c.execute(query)
+    rows = c.fetchall()
+    for row in rows:
+        id1 = str(row[0])
+        id2 = str(row[1])
+        try:
+            c.execute("INSERT INTO pairings values (%s, %s)" % (id1, id2))
+        except psycopg2.IntegrityError:
+            print "continue"
+    db.close()
+
+

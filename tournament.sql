@@ -18,6 +18,10 @@ CREATE TABLE players ( name TEXT,
 CREATE TABLE matches ( winner INTEGER,
 					   loser INTEGER);
 
+CREATE TABLE pairings ( id1 INTEGER UNIQUE,
+					   id2 INTEGER UNIQUE,
+					   UNIQUE (id1, id2));
+
 
 CREATE VIEW standings AS
     SELECT
@@ -55,25 +59,168 @@ CREATE VIEW standings AS
 
 
 
-CREATE VIEW evenstandings AS
-    WITH subq AS
-        (
-        SELECT
-            id, name, wins, totalplayed, ROW_NUMBER()
-            OVER (ORDER BY id ASC)
-        FROM standings
-        )
-    SELECT
-        a.id,
-        a.name,
-        a.wins,
-        a.totalplayed
-    FROM
-        subq as a, subq as b
+CREATE VIEW pairup AS
+	SELECT
+		evenid as id1,
+		p1.name as name1,
+		oddid as id2,
+		p2.name as name2
+	FROM
+	players AS p1,
+	players AS p2,
+	(
+		WITH subq AS
+		(
+		SELECT
+	        id, wins, totalplayed, ROW_NUMBER()
+	        OVER (ORDER BY wins DESC)
+	    FROM standings
+		)
+	    SELECT
+	        a.id AS evenid,
+	        a.wins AS evenwins,
+	        a.totalplayed AS eventotalplayed,
+	        b.id AS oddid,
+	        b.wins AS oddwins,
+	        b.totalplayed AS oddtotalplayed
+	    FROM
+	        subq as a, subq as b
+	    WHERE
+	        a.row_number+1 = b.row_number
+	        AND (a.row_number % 2) = 1
+	        AND (b.row_number % 2) = 0
+    )
+    AS
+	    div
     WHERE
-        a.row_number+1 = b.row_number
-        AND (a.row_number % 2) = 1
-        AND (b.row_number % 2) = 0;
+    	evenwins = oddwins
+    	AND
+    	eventotalplayed = oddtotalplayed
+    	AND
+    	evenid = p1.id
+    	AND
+    	oddid = p2.id
+    ORDER BY
+    	evenwins DESC;
+
+
+
+-- WITH subq AS
+-- 	(
+-- 	WITH subq AS
+-- 		(
+-- 		SELECT
+-- 	        id, wins, totalplayed, ROW_NUMBER()
+-- 	        OVER (ORDER BY id ASC)
+-- 	    FROM standings
+-- 		)
+-- 	SELECT
+-- 	 	a.id as id1,
+-- 	 	b.id as id2
+-- 	 FROM
+-- 	 	subq as a, subq as b
+-- 	 WHERE
+-- 	 	a.wins = b.wins
+-- 	 	AND
+-- 	 	a.totalplayed = b.totalplayed
+-- 	 	AND
+-- 	 	b.row_number > a.row_number
+-- 	 ORDER BY
+-- 	 	a.id DESC
+-- 	)
+-- SELECT
+-- 	min(id1),
+-- 	id2
+-- FROM
+-- 	subq
+-- GROUP BY
+-- 	id2;
+
+-- -------
+CREATE VIEW pairupv2 AS
+	WITH combos AS
+		(
+		WITH combos AS
+			(
+			WITH subq AS
+				(
+				SELECT
+				 	a.id as id1,
+				 	b.id as id2
+				 FROM
+				 	standings as a, standings as b
+				 WHERE
+				 	a.wins = b.wins
+				 	AND
+				 	a.totalplayed = b.totalplayed
+				 	AND
+				 	a.id != b.id
+				 ORDER BY
+				 	a.id DESC
+				 )
+				SELECT
+				        id1, id2, ROW_NUMBER()
+				        OVER (ORDER BY id1 ASC)
+				FROM subq
+			)
+			SELECT
+				c1.id1,
+				c1.id2,
+				-- https://stackoverflow.com/questions/15814400/remove-rows-with-duplicate-values
+				ROW_NUMBER() OVER (PARTITION BY c1.id2 ORDER BY c1.id2) as occurance
+			FROM
+				combos AS c1,
+				(
+					SELECT
+						id1,
+						min(row_number) as row_number
+					FROM
+						combos
+					GROUP BY
+						id1
+				)
+				AS c2
+			WHERE
+				c1.row_number = c2.row_number
+			ORDER BY
+				c1.id2
+		)
+		SELECT
+			id1,
+			id2
+		FROM
+			combos
+		WHERE
+			occurance = 1;
+
+
+
+-- __________
+
+--     WITH subq AS
+--     	(
+-- 		SELECT
+-- 		 	a.id as id1,
+-- 		 	b.id as id2
+-- 		 FROM
+-- 		 	standings as a, standings as b
+-- 		 WHERE
+-- 		 	a.wins = b.wins
+-- 		 	AND
+-- 		 	a.totalplayed = b.totalplayed
+-- 		 	AND
+-- 		 	a.id != b.id
+-- 		 ORDER BY
+-- 		 	a.id DESC
+-- 		 )
+-- 	SELECT
+-- 		min(id1) as id1,
+-- 		min(id2) as id2
+-- 	FROM subq
+-- 	GROUP BY
+-- 		id1,
+-- 		id2;
+
 
 
 
