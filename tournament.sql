@@ -148,7 +148,8 @@ CREATE VIEW pairupv2 AS
 				(
 				SELECT
 				 	a.id as id1,
-				 	b.id as id2
+				 	b.id as id2,
+				 	ROW_NUMBER() OVER (ORDER BY a.id ASC)
 				 FROM
 				 	standings as a, standings as b
 				 WHERE
@@ -196,15 +197,205 @@ CREATE VIEW pairupv2 AS
 			occurance = 1
     )
     SELECT
-        *
+    	*
     FROM
-        uni as a
-        LEFT JOIN
-        (SELECT id1 as id3, id2 as id4 FROM uni) as b
-    ON
-        a.id1 = b.id4
-        AND
-        a.id2 = b.id3;
+    	uni
+    WHERE
+    	id1 NOT IN (SELECT
+				        id1
+				    FROM
+				        uni a
+				    WHERE
+				    	id1 > id2
+				    	AND
+				    	EXISTS (SELECT *
+				    			FROM uni b
+				    			WHERE a.id1 = b.id2))
+    	AND
+    	id2 NOT IN (SELECT
+				        id2
+				    FROM
+				        uni a
+				    WHERE
+				    	id1 > id2
+				    	AND
+				    	EXISTS (SELECT *
+				    			FROM uni b
+				    			WHERE a.id1 = b.id2));
+
+
+
+
+
+
+
+-- objective:
+-- get rid of mirrored duplicates
+-- get rid of rows where id occures in 2 columns keeping the row where the pair id only occures in one column
+WITH sq4 AS
+(
+	WITH sq3 AS
+	(
+		WITH sq2 AS
+		(
+			WITH sq AS
+				( -- get all possible match combinations
+				SELECT
+				 	a.id as id1,
+				 	b.id as id2
+				 FROM
+				 	standings as a, standings as b
+				 WHERE
+				 	a.wins = b.wins
+				 	AND
+				 	a.totalplayed = b.totalplayed
+				 	AND
+				 	a.id != b.id
+				 ORDER BY
+				 	a.id DESC
+				)
+				SELECT
+					id1,
+					id2
+				FROM
+					sq
+				WHERE
+					-- remove possible match combinations that have already been played
+					NOT EXISTS (SELECT
+							        1
+							    FROM
+							        matches
+							    WHERE
+							    	(sq.id1 = matches.winner
+							    	AND
+							    	sq.id2 = matches.loser)
+							    	OR
+							    	(sq.id2 = matches.winner
+							    	AND
+							    	sq.id1 = matches.loser))
+		)
+		SELECT
+			id1,
+			id2,
+			ROW_NUMBER() OVER (ORDER BY id1 DESC)
+		FROM
+			sq2
+	)
+	SELECT
+		a.id1,
+		a.id2,
+		ROW_NUMBER() OVER (PARTITION BY id1 ORDER BY id1 DESC) as occurance
+	FROM
+		sq3 a
+	WHERE
+		NOT EXISTS (WITH minisq AS
+					( -- limit to everything up to the current row
+						SELECT *
+						FROM sq3 b
+						LIMIT a.row_number
+					)
+					SELECT
+						1
+					FROM
+						minisq c
+					WHERE
+					a.id2 = c.id1
+					)
+	ORDER BY
+		a.id2 DESC
+)
+SELECT
+	id1,
+	id2
+FROM
+	sq4
+WHERE
+	occurance = 1
+ORDER BY
+	id2 ASC;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- WITH sq3 AS
+-- (
+-- 	SELECT
+-- 	id1,
+-- 	id2
+-- 	FROM
+-- 	(
+-- 		SELECT
+-- 			id1,
+-- 			id2,
+-- 		 	ROW_NUMBER() OVER (PARTITION BY id2 ORDER BY id2) as occurance
+-- 		FROM
+-- 		(
+-- 		SELECT
+-- 		 	a.id as id1,
+-- 		 	b.id as id2,
+-- 		 	ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY a.id) as occurance
+-- 		 FROM
+-- 		 	standings as a, standings as b
+-- 		 WHERE
+-- 		 	a.wins = b.wins
+-- 		 	AND
+-- 		 	a.totalplayed = b.totalplayed
+-- 		 	AND
+-- 		 	a.id != b.id
+-- 		 ORDER BY
+-- 		 	a.id DESC
+-- 		 ) as sq1
+-- 		WHERE
+-- 			occurance = 1
+-- 	) as sq2
+-- 	WHERE
+-- 	 occurance = 1
+-- )
+-- -- objective:
+-- -- get rid of mirrored duplicates
+-- -- get rid of rows where id occures in 2 columns keeping the row where the pair id only occures in one column
+-- SELECT
+-- id1,
+-- id2
+-- FROM
+-- sq3
+-- WHERE
+-- id1 NOT IN (SELECT
+-- 			id1
+-- 			FROM
+-- 			sq3 a
+-- 			WHERE
+-- 			EXISTS (SELECT * 
+-- 					FROM sq3 b
+-- 					WHERE a.id1 = b.id2)
+-- 			AND
+-- 			NOT EXISTS (SELECT * 
+-- 					FROM sq3 b
+-- 					WHERE a.id2 = b.id1));
+
+
+
+
+    -- SELECT
+    --     *
+    -- FROM
+    --     uni as a
+    --     LEFT JOIN
+    --     (SELECT id1 as id3, id2 as id4 FROM uni) as b
+    -- ON
+    --     a.id1 = b.id4
+    --     AND
+    --     a.id2 = b.id3;
 
 
 
