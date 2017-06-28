@@ -95,7 +95,7 @@ print pairings
 
 
 
-tournament.pairup()
+# tournament.pairup()
 
 
 

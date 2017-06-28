@@ -138,6 +138,8 @@ CREATE VIEW pairup AS
 
 -- -------
 CREATE VIEW pairupv2 AS
+    WITH uni AS
+    (
 	WITH combos AS
 		(
 		WITH combos AS
@@ -191,9 +193,64 @@ CREATE VIEW pairupv2 AS
 		FROM
 			combos
 		WHERE
-			occurance = 1;
+			occurance = 1
+    )
+    SELECT
+        *
+    FROM
+        uni as a
+        LEFT JOIN
+        (SELECT id1 as id3, id2 as id4 FROM uni) as b
+    ON
+        a.id1 = b.id4
+        AND
+        a.id2 = b.id3;
 
 
+
+-- WITH allunique AS
+-- (
+--     WITH uniqueid2 AS
+--     (
+--         WITH uniqueid1 AS
+--         (
+--             SELECT
+--                 a.id as id1,
+--                 b.id as id2,
+--                 ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY b.id) as occurance
+--              FROM
+--                 standings as a, standings as b
+--              WHERE
+--                 a.wins = b.wins
+--                 AND
+--                 a.totalplayed = b.totalplayed
+--                 AND
+--                 a.id != b.id
+--              ORDER BY
+--                 a.id DESC
+--         )
+--         SELECT
+--             id1,
+--             id2
+--         FROM
+--             uniqueid1
+--         WHERE
+--             occurance = 1
+--     )
+--     SELECT
+--         id1,
+--         id2,
+--         ROW_NUMBER() OVER (PARTITION BY id2 ORDER BY id2) as occurance
+--     FROM
+--         uniqueid2;
+-- )
+-- SELECT
+--     id1,
+--     id2
+-- FROM
+--     allunique
+-- WHERE
+--     occurance = 1;
 
 -- __________
 
