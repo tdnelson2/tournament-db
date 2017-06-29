@@ -318,8 +318,39 @@ ORDER BY
 
 
 
-
-
+WITH sq AS
+    ( -- get all possible match combinations
+    SELECT
+        a.id as id1,
+        b.id as id2
+     FROM
+        standings a
+        LEFT JOIN
+        standings b
+     ON
+        a.wins = b.wins
+        AND
+        a.totalplayed = b.totalplayed
+        AND
+        a.id != b.id
+        AND
+        -- remove possible match combinations that have already been played
+        NOT EXISTS (SELECT
+                        1
+                    FROM
+                        matches
+                    WHERE
+                        (a.id = matches.winner
+                        AND
+                        b.id = matches.loser)
+                        OR
+                        (b.id = matches.winner
+                        AND
+                        a.id = matches.loser))
+     ORDER BY
+        a.wins, a.totalplayed
+    )
+    SELECT
 
 
 
@@ -375,11 +406,11 @@ ORDER BY
 -- 			FROM
 -- 			sq3 a
 -- 			WHERE
--- 			EXISTS (SELECT * 
+-- 			EXISTS (SELECT *
 -- 					FROM sq3 b
 -- 					WHERE a.id1 = b.id2)
 -- 			AND
--- 			NOT EXISTS (SELECT * 
+-- 			NOT EXISTS (SELECT *
 -- 					FROM sq3 b
 -- 					WHERE a.id2 = b.id1));
 
