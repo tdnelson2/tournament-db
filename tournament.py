@@ -3,7 +3,9 @@
 # tournament.py -- implementation of a Swiss-system tournament
 #
 
-import psycopg2, bleach
+import psycopg2
+import bleach
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -17,7 +19,6 @@ def deleteMatches():
     c.execute("DELETE FROM matches;")
     db.commit()
     db.close
-
 
 
 def deletePlayers():
@@ -95,7 +96,6 @@ def reportMatch(winner, loser):
     db.close()
 
 
-
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
 
@@ -116,6 +116,4 @@ def swissPairings():
     c.execute("SELECT * FROM pairup;")
     rows = c.fetchall()
     db.close()
-    return list(reversed(rows))
-
-
+    ret list(reversed(rows))

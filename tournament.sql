@@ -1,10 +1,5 @@
 -- Table definitions for the tournament project.
---
--- Put your SQL 'create table' statements in this file; also 'create view'
--- statements if you choose to use it.
---
--- You can write comments in this file by starting them with two dashes, like
--- these lines here.
+
 
 DROP DATABASE IF EXISTS tournament;
 
@@ -14,12 +9,14 @@ CREATE DATABASE tournament;
 
 CREATE TABLE players ( name TEXT,
                        id SERIAL,
-                       PRIMARY KEY (id));
+                       PRIMARY KEY (id) );
 
 CREATE TABLE matches ( winner INTEGER REFERENCES players (id),
 					   loser INTEGER REFERENCES players (id),
-					   PRIMARY KEY (winner, loser));
+					   PRIMARY KEY (winner, loser) );
 
+
+-- show how each player is doing sorted by number of games played and wins
 
 CREATE VIEW standings AS
     SELECT
@@ -57,6 +54,9 @@ CREATE VIEW standings AS
 
 
 
+-- pair new matches base upon, wins, number of games played. 
+-- remove the possiblity of 2 players playing each other twice
+
 CREATE VIEW pairup AS
 	SELECT
 			a.id1 id1,
@@ -66,13 +66,29 @@ CREATE VIEW pairup AS
 		FROM
 		(
 		WITH sq4 AS
-		(
+		( 
+
+		-- remove one of the rows when an id appears once in each column
+
+
 			WITH sq3 AS
-			(
+			( 
+
+			-- remove rows where id appears more than once in column 1
+
+
 				WITH sq2 AS
-				(
+				( 
+
+				-- partition by number of times id occures in column 1
+
+
 				WITH sq AS
-				    ( -- get all possible match combinations
+				    ( 
+
+				    -- get all possible match combinations
+
+
 				    SELECT
 				        a.id as id1,
 				        b.id as id2,
@@ -111,8 +127,6 @@ CREATE VIEW pairup AS
 					    id2,
 					    wins,
 					    totalplayed,
-					    -- ROW_NUMBER() OVER (PARTITION BY id1) as occurance
-					    -- ROW_NUMBER() OVER (PARTITION BY id1 ORDER BY wins, totalplayed) as occurance
 					    ROW_NUMBER() OVER (ORDER BY wins, totalplayed)
 				    FROM
 					    sq a
@@ -179,7 +193,7 @@ CREATE VIEW pairup AS
 							   a.wins = b.wins
 							   AND a.totalplayed = b.totalplayed
 						   ORDER BY
-							   b.id2 >= b.id1
+							   row_number
 						)
 						SELECT
 							1
