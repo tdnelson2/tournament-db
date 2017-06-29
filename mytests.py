@@ -41,51 +41,27 @@ for result in [(1, 2),
 	tournament.reportMatch(*result)
 
 pairings = tournament.swissPairings()
-print str(len(pairings)) + " pairings found"
 print pairings
 
-##### 2ND ROUND
+#### 2ND ROUND
 
-for result in [(4, 2),
-			   (6, 8),
-			   (12, 10),
-			   (14, 16),
-			   (1, 3),
-			   (7, 5),
-			   (9, 11),
-			   (13, 15)]:
+for result in [(4, 2), (14, 10), (12, 8), (16, 6), (7, 15), (11, 1), (9, 5), (3, 13)]:
 	tournament.reportMatch(*result)
 
 pairings = tournament.swissPairings()
-print str(len(pairings)) + " pairings found"
 print pairings
 
 ##### 3RD ROUND
 
-for result in [(8, 2),
-			   (16, 10),
-			   (4, 3),
-			   (5, 6),
-			   (11, 12),
-			   (15, 14),
-			   (1, 7),
-			   (9, 13)]:
+for result in [(2, 10), (6, 8), (4, 1), (14, 16), (13, 5), (12, 15), (9, 11), (3, 7)]:
 	tournament.reportMatch(*result)
 
 pairings = tournament.swissPairings()
-print str(len(pairings)) + " pairings found"
 print pairings
 
-###### 4TH ROUND
+# ###### 4TH ROUND
 
-# for result in [(10, 2),
-# 			   (3, 6),
-# 			   (8, 12),
-# 			   (16, 14),
-# 			   (5, 4),
-# 			   (11, 7),
-# 			   (13, 15),
-# 			   (9, 1)]:
+# for result in [(8, 10), (6, 15), (2, 5), (1, 16), (11, 7), (7, 14), (4, 13), (9, 3)]:
 # 	tournament.reportMatch(*result)
 
 # pairings = tournament.swissPairings()

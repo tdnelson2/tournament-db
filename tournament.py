@@ -22,6 +22,7 @@ def deleteMatches():
 
 def deletePlayers():
     """Remove all the player records from the database."""
+    deleteMatches()
     db = connect()
     c = db.cursor()
     c.execute("DELETE FROM players;")
@@ -112,69 +113,9 @@ def swissPairings():
     """
     db = connect()
     c = db.cursor()
-    c.execute("SELECT max(totalplayed) FROM standings;")
+    c.execute("SELECT * FROM pairup;")
     rows = c.fetchall()
-    maxRoundsPlayed = rows[0][0]
-    c.execute("SELECT max(wins) FROM standings;")
-    rows = c.fetchall()
-    maxWins = rows[0][0]
-    query = """
-    WITH sq AS
-        (SELECT id, name, ROW_NUMBER() OVER (ORDER BY id ASC) FROM (SELECT id, name FROM standings WHERE wins = {wins} and totalplayed = {totalplayed}) as sg)
-    SELECT
-        a.id AS id1,
-        a.name AS name1,
-        b.id AS id2,
-        b.name AS name2
-    FROM
-        sq as a, sq as b
-    WHERE
-        a.row_number+1 = b.row_number
-        AND (a.row_number % 2) = 1
-        AND (b.row_number % 2) = 0;
-    """
-    pairings = []
-    for x in range(maxRoundsPlayed+1):
-        for y in range(maxWins+1):
-            c.execute(query.format(wins=str(y), totalplayed=str(x)))
-            rows = c.fetchall()
-            if rows:
-                for row in rows: 
-                    pairings.append(row)
     db.close()
-    return pairings
-
-
-
-def pairup():
-    db = connect()
-    c = db.cursor()
-    c.execute("DELETE FROM pairings;")
-    db.commit()
-    query = """
-        SELECT
-            a.id as id1,
-            b.id as id2
-         FROM
-            standings as a, standings as b
-         WHERE
-            a.wins = b.wins
-            AND
-            a.totalplayed = b.totalplayed
-            AND
-            a.id != b.id
-         ORDER BY
-            a.id DESC;
-    """
-    c.execute(query)
-    rows = c.fetchall()
-    for row in rows:
-        id1 = str(row[0])
-        id2 = str(row[1])
-        try:
-            c.execute("INSERT INTO pairings values (%s, %s)" % (id1, id2))
-        except psycopg2.IntegrityError:
-            print "continue"
-    db.close()
+    return list(reversed(rows))
 
 
