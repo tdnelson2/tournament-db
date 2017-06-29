@@ -116,4 +116,4 @@ def swissPairings():
     c.execute("SELECT * FROM pairup;")
     rows = c.fetchall()
     db.close()
-    ret list(reversed(rows))
+    return list(reversed(rows))
