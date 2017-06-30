@@ -53,7 +53,7 @@ def registerPlayer(name):
     db = connect()
     c = db.cursor()
     # remove any occurance of quotes/apostrophes to prevent sql injection
-    safe_n = name=name.translate(None, '\'\"')
+    safe_n = name = name.translate(None, '\'\"')
     query = "INSERT INTO players (name) values ('{name}')".format(name=safe_n)
     c.execute(query)
     db.commit()
@@ -95,7 +95,7 @@ def reportMatch(winner, loser):
         raise ValueError(
             "\"winner\" and/or \"loser\" input are not integers.\n"
             "Please use the id number of each player to report match results."
-            )
+        )
     w = str(winner)
     l = str(loser)
     db = connect()
