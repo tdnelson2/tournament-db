@@ -35,10 +35,9 @@ def countPlayers():
     db = connect()
     c = db.cursor()
     c.execute("SELECT COUNT(*) FROM players;")
-    rows = c.fetchall()
-    db.commit()
+    rows = c.fetchone()
     db.close
-    return rows[0][0]
+    return rows[0]
 
 
 def registerPlayer(name):
