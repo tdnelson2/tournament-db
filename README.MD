@@ -30,6 +30,9 @@ for player in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "H", "I"]:
 * See initial standings (before any matches have been played):
 ~~~
 exit() # to exit shell
+~~~
+then:
+~~~
 psql -U vagrant -d tournament -c 'SELECT * from standings'
 ~~~
 Output should be:
@@ -65,13 +68,14 @@ Output should be
 (4, 'D', 1, 'A'), 
 (8, 'H', 11, 'H')]
 ~~~
-* Report winners using `reportMatch(<<Winner ID>>, <<Loser ID>>)`
+* Report winners and losers using `reportMatch(<<Winner ID>>, <<Loser ID>>)`
 ~~~
 # here I arbitrarily chose the left player as winner and right as loser
 for result in [(2, 6), (3, 12), (9, 10), (7, 5), (4, 1), (8, 11)]:
 	reportMatch(*result)
 ~~~
-* Now if you do `exit()`, `psql -U vagrant -d tournament -c 'SELECT * from standings'`, you should see a table where half the players have wone and half has lost
-* Continue getting pairings and reporting matches until `standings` reports only one player with the most wins. That will be your winner.
+* Now if you do `exit()`, `psql -U vagrant -d tournament -c 'SELECT * from standings'`, you should see a table where half the players have one win and half have zero wins
+* Continue getting pairings and reporting matches until `standings` reports only one player with the most wins
+* You have an overall winner
 
 
