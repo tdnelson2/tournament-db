@@ -1,8 +1,7 @@
 # Tournament Results Database
-The purpose of this project is to demonstrate how you can used psql to manage a Swiss Pairing tournament. Databases are particually usefull for this type of tournament because of it's high levels complexity.
+The purpose of this project is to demonstrate how you can used psql to manage a Swiss Pairing tournament. Databases are particularly usefull for this type of tournament because of it's high levels complexity.
 
 ## Installation
-* Clone this project to your system
 * Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
 * Install [Vagrant](https://www.vagrantup.com/downloads.html)
 * Clone [This VM configuration](https://github.com/udacity/fullstack-nanodegree-vm) onto your machine
@@ -14,25 +13,26 @@ The purpose of this project is to demonstrate how you can used psql to manage a 
 ## Use
 * From inside the `vagrant` folder, run `vagrant up`, `vagrant ssh`
 * Once vagrant has launched, cd into this project folder (`cd \vagrant\tournament-db`)
-* Run `psql` then `\i tournament.sql` to setup the database then `[contro]`-`d` to exit
+* Run `psql` then `\i tournament.sql` to setup the database then `\q` to exit
 * Launch a python shell and import the tournament tests module (type `python`, `import tournament_tests as t`
-* Use `help(t)` to see the docstrings and functions available
+* Use `help(t)` to see the functions and docstrings available
 * Run the tests per your choosing
 
 ## Build your own tournament
 * Follow the first three steps in the 'Use' instructions
-* Launch a python shell and load players into the database
+* Launch a python shell and load players into the database:
 ~~~
 from tournament import *
+
 for player in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "H", "I"]:
 	registerPlayer(player)
 ~~~
-* See initial standings (before any matches have been played)
+* See initial standings (before any matches have been played):
 ~~~
-exit()
+exit() # to exit shell
 psql -U vagrant -d tournament -c 'SELECT * from standings'
 ~~~
-Output should be
+Output should be:
 ~~~
 id | name | wins | totalplayed 
 ----+------+------+-------------
@@ -50,9 +50,10 @@ id | name | wins | totalplayed
   6 | F    |    0 |           0
 (12 rows)
 ~~~
-* Go back to python shell and create initial pairings
+* Go back to python shell and create initial pairings:
 ~~~
 from tournament import *
+
 swissPairings()
 ~~~
 Output should be
@@ -64,13 +65,13 @@ Output should be
 (4, 'D', 1, 'A'), 
 (8, 'H', 11, 'H')]
 ~~~
-* Report winners using `reportMatch([[winner id]], [[loser id]])`
+* Report winners using `reportMatch(<<Winner ID>>, <<Loser ID>>)`
 ~~~
-# here I reused arbitrarily chose the left player as winner and right as loser
+# here I arbitrarily chose the left player as winner and right as loser
 for result in [(2, 6), (3, 12), (9, 10), (7, 5), (4, 1), (8, 11)]:
 	reportMatch(*result)
 ~~~
-* Now if you do `psql -U vagrant -d tournament -c 'SELECT * from standings'`, you should see a table where half the players have one and half has lost
-* Continue getting pairings and reporting matches until `standings` reports only one player with the most wins
+* Now if you do `exit()`, `psql -U vagrant -d tournament -c 'SELECT * from standings'`, you should see a table where half the players have wone and half has lost
+* Continue getting pairings and reporting matches until `standings` reports only one player with the most wins. That will be your winner.
 
 
