@@ -52,10 +52,7 @@ def registerPlayer(name):
 
     db = connect()
     c = db.cursor()
-    # remove any occurance of quotes/apostrophes to prevent sql injection
-    safe_n = name = name.translate(None, '\'\"')
-    query = "INSERT INTO players (name) values ('{name}')".format(name=safe_n)
-    c.execute(query)
+    c.execute("INSERT INTO players (name) values (%s)", name)
     db.commit()
     db.close()
 
@@ -100,8 +97,7 @@ def reportMatch(winner, loser):
     l = str(loser)
     db = connect()
     c = db.cursor()
-    statement = "INSERT INTO matches values ({w}, {l})".format(w=w, l=l)
-    c.execute(statement)
+    c.execute("INSERT INTO matches values (%s, %s)", (w,l))
     db.commit()
     db.close()
 
