@@ -12,203 +12,94 @@ CREATE TABLE players ( name TEXT,
                        PRIMARY KEY (id) );
 
 CREATE TABLE matches ( winner INTEGER REFERENCES players (id),
-					   loser INTEGER REFERENCES players (id),
-					   PRIMARY KEY (winner, loser) );
+					   loser INTEGER REFERENCES players (id) );
 
 
 -- show how each player is doing sorted by number of games played and wins
 
 CREATE VIEW standings AS
     SELECT
-        a.id,
-        a.name,
-        SUM(a.wins) AS wins,
-        SUM(b.loses)+SUM(a.wins) AS totalplayed
+        player_wins.id,
+        player_wins.name,
+        SUM(player_wins.wins) AS wins,
+        SUM(player_loses.loses)+SUM(player_wins.wins) AS totalplayed
     FROM
+    	-- add up wins for each player (players may appear twice)
         (
         SELECT
-            players.id, players.name, COUNT(m1.winner) AS wins
+            players.id, players.name, COUNT(matches.winner) AS wins
         FROM
             players
-        LEFT JOIN
-            (SELECT winner FROM matches) AS m1
-        ON players.id = m1.winner
+        LEFT JOIN 
+        	matches
+        ON players.id = matches.winner
         GROUP BY players.id, players.name
         )
-        AS a
+        AS player_wins
     LEFT JOIN
+    	-- add up loses for each player
         (
         SELECT
-            players.id, COUNT(m2.loser) AS loses
+            players.id, COUNT(matches.loser) AS loses
         FROM
             players
         LEFT JOIN
-            (SELECT loser FROM matches) AS m2
-        ON players.id = m2.loser
+            matches
+        ON players.id = matches.loser
         GROUP BY players.id
         )
-        AS b
-    ON a.id = b.id
-    GROUP BY a.id, a.name
-    ORDER BY SUM(a.wins) DESC;
+        AS player_loses
+    ON player_wins.id = player_loses.id
+    GROUP BY player_wins.id, player_wins.name
+    ORDER BY SUM(player_wins.wins) DESC;
 
 
 
--- pair new matches base upon, wins, number of games played. 
--- remove the possiblity of 2 players playing each other twice
-
-CREATE VIEW pairup AS
+-- inject row count into the standings table
+CREATE VIEW enumerated_standings AS
 	SELECT
-			a.id1 id1,
-			b.name name1,
-			a.id2 id2,
-			c.name name2
-		FROM
-		(
-		WITH sq4 AS
-		( 
+		ROW_NUMBER() OVER(),
+		*
+	FROM
+		standings;
 
-		-- remove one of the rows when an id appears once in each column
+-- standings from rows 2, 4, 6, 8, etc in the standings view
+CREATE VIEW even_standings AS
+	SELECT
+		ROW_NUMBER() OVER() even_row_number,
+		*
+	FROM
+		enumerated_standings
+	WHERE
+		(enumerated_standings.row_number % 2) = 0;
+
+-- standings from rows 1, 3, 5, 7, etc in the standings view
+CREATE VIEW odd_standings AS
+	SELECT
+		ROW_NUMBER() OVER() odd_row_number,
+		*
+	FROM
+		enumerated_standings
+	WHERE
+		(enumerated_standings.row_number % 2) = 1;
+
+-- create match ups with players who have the most simular win records
+CREATE VIEW pairup AS
+
+	SELECT
+		standings_a.id id1,
+		standings_a.name name1,
+		standings_b.id id2,
+		standings_b.name name2
+	FROM
+		odd_standings standings_a, even_standings standings_b
+	WHERE
+		-- each adjacent row from standings becomes a match
+		standings_a.odd_row_number = standings_b.even_row_number;
 
 
-			WITH sq3 AS
-			( 
-
-			-- remove rows where id appears more than once in column 1
 
 
-				WITH sq2 AS
-				( 
 
-				-- partition by number of times id occures in column 1
-
-
-				WITH sq AS
-				    ( 
-
-				    -- get all possible match combinations
-
-
-				    SELECT
-				        a.id as id1,
-				        b.id as id2,
-				        a.wins,
-				        a.totalplayed,
-						ROW_NUMBER() OVER (ORDER BY a.wins, a.totalplayed)
-				     FROM
-				        standings a
-				        LEFT JOIN
-				        standings b
-				     ON
-				        a.wins = b.wins
-				        AND
-				        a.totalplayed = b.totalplayed
-				        AND
-				        a.id != b.id
-				        AND
-				        -- remove possible match combinations that have already been played
-				        NOT EXISTS (SELECT
-				                        1
-				                    FROM
-				                        matches
-				                    WHERE
-				                        (a.id = matches.winner
-				                        AND
-				                        b.id = matches.loser)
-				                        OR
-				                        (b.id = matches.winner
-				                        AND
-				                        a.id = matches.loser))
-				     ORDER BY
-				        a.wins, a.totalplayed
-				    )
-				    SELECT
-					    id1,
-					    id2,
-					    wins,
-					    totalplayed,
-					    ROW_NUMBER() OVER (ORDER BY wins, totalplayed)
-				    FROM
-					    sq a
-				    WHERE
-				    	-- remove inverted duplicates
-						NOT EXISTS (WITH minisq AS
-								( -- limit to everything up to the current row
-									SELECT *
-									FROM sq b
-									LIMIT a.row_number
-								)
-								SELECT
-									1
-								FROM
-									minisq c
-								WHERE
-								a.id2 = c.id1
-								AND
-								a.id1 = c.id2
-								)
-				     ORDER BY
-				        wins, totalplayed
-				)
-				SELECT
-					id1,
-					id2,
-					wins,
-					totalplayed,
-				    ROW_NUMBER() OVER (PARTITION BY id1 ORDER BY row_number) as occurance
-				FROM
-					sq2
-				ORDER BY
-					row_number
-			)
-			SELECT
-				id1,
-				id2,
-				wins,
-				totalplayed,
-			    ROW_NUMBER() OVER (ORDER BY wins, totalplayed)
-			FROM
-				sq3
-			WHERE
-				occurance = 1
-			ORDER BY
-				wins, totalplayed
-		)
-		SELECT
-			id1,
-			id2,
-			wins,
-			totalplayed,
-			row_number
-		FROM
-			sq4 a
-		WHERE
-			-- remove rows with values in column 2 that exist in column 1
-			-- this should be the case for win-totalplayed 
-			NOT EXISTS (WITH minisq AS
-		    		   ( -- group all the pairs by totalplayed, wins 
-					   	SELECT b.id1, b.id2, ROW_NUMBER() OVER (ORDER BY row_number) as inner_rn
-						   FROM sq4 b
-						   WHERE
-							   a.wins = b.wins
-							   AND a.totalplayed = b.totalplayed
-						   ORDER BY
-							   row_number
-						)
-						SELECT
-							1
-						FROM
-							minisq c
-						WHERE
-						a.id1 = c.id1
-						AND a.id2 = c.id2
-						-- return true only if it's an odd row (within the win-totalplayed group)
-						AND (c.inner_rn % 2) = 0
-						)
-		) a, players b, players c
-		WHERE
-			a.id1 = b.id
-			AND
-			a.id2 = c.id;
 
 
