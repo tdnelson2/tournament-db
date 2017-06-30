@@ -4,7 +4,6 @@
 #
 
 import psycopg2
-import bleach
 
 
 def connect():
@@ -54,7 +53,10 @@ def registerPlayer(name):
 
     db = connect()
     c = db.cursor()
-    c.execute("INSERT INTO players (name) values (%s)", (bleach.clean(name),))
+    # remove any occurance of quotes/apostrophes to prevent sql injection
+    safe_n = name=name.translate(None, '\'\"')
+    query = "INSERT INTO players (name) values ('{name}')".format(name=safe_n)
+    c.execute(query)
     db.commit()
     db.close()
 
