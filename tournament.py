@@ -100,7 +100,8 @@ def reportMatch(winner, loser):
     l = str(loser)
     db = connect()
     c = db.cursor()
-    c.execute("INSERT INTO matches values (%s, %s)" % (w, l))
+    statement = "INSERT INTO matches values ({w}, {l})".format(w=w, l=l)
+    c.execute(statement)
     db.commit()
     db.close()
 
