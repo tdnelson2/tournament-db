@@ -52,7 +52,8 @@ def registerPlayer(name):
 
     db = connect()
     c = db.cursor()
-    c.execute("INSERT INTO players (name) values (%s)", name)
+    sql = "INSERT INTO players (name) values (%s)"
+    c.execute(sql, (name,))
     db.commit()
     db.close()
 
